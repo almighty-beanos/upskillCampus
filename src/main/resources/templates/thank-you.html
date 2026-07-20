@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmed</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #1F2A24; --parchment: #F3EFE6; --market-green: #2F6F4E; --market-green-dark: #21503A;
+            --tag-gold: #C99A3D; --muted: #6B7268; --card-bg: #FFFFFF; --border: rgba(31, 42, 36, 0.12);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh; background: var(--parchment); color: var(--ink);
+            font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased;
+            display: flex; align-items: center; justify-content: center; padding: 40px 6vw;
+        }
+
+        .confirm-card {
+            max-width: 520px; width: 100%; background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 14px; padding: 40px 36px; text-align: center;
+        }
+
+        .check-badge {
+            width: 56px; height: 56px; border-radius: 50%; background: var(--market-green); color: #fff;
+            display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin: 0 auto 18px;
+        }
+
+        h1 { font-family: 'Bitter', serif; font-size: 1.5rem; margin: 0 0 6px; }
+        .subtitle { color: var(--muted); font-size: 0.92rem; margin: 0 0 26px; }
+
+        .summary {
+            background: var(--parchment); border-radius: 10px; padding: 18px 20px; margin-bottom: 24px; text-align: left;
+        }
+        .summary-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.88rem; }
+        .summary-row .label { color: var(--muted); }
+        .summary-row .value { font-weight: 600; }
+        .summary-row .amount { font-family: 'IBM Plex Mono', monospace; color: var(--market-green-dark); font-weight: 700; }
+
+        .contact-card {
+            border: 1px dashed var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 22px; text-align: left;
+        }
+        .contact-card h2 { font-family: 'Bitter', serif; font-size: 0.95rem; margin: 0 0 10px; }
+        .contact-row { font-size: 0.88rem; margin: 4px 0; }
+        .contact-row .label { color: var(--muted); margin-right: 6px; }
+
+        .countdown-note {
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem; color: var(--muted); margin-bottom: 22px;
+        }
+        .countdown-note span { font-weight: 700; color: var(--ink); }
+
+        .discover-btn {
+            display: inline-block; font-family: 'Bitter', serif; font-weight: 700; font-size: 0.95rem;
+            background: var(--market-green); color: #fff; text-decoration: none; padding: 12px 26px; border-radius: 8px;
+        }
+        .discover-btn:hover { background: var(--market-green-dark); }
+    </style>
+</head>
+<body>
+
+<div class="confirm-card">
+    <div class="check-badge">✓</div>
+    <h1 th:text="${thankYou.type == 'SERVICE'} ? 'Appointment Booked!' : 'Purchase Confirmed!'">Confirmed</h1>
+    <p class="subtitle" th:text="${thankYou.type == 'SERVICE'} ? 'Your appointment has been booked and paid for.' : 'Your order has been placed and paid for.'">Subtitle</p>
+
+    <div class="summary">
+        <div class="summary-row">
+            <span class="label" th:text="${thankYou.type == 'SERVICE'} ? 'Service' : 'Item'">Item</span>
+            <span class="value" th:text="${thankYou.itemName}">Name</span>
+        </div>
+        <div class="summary-row">
+            <span class="label" th:text="${thankYou.type == 'SERVICE'} ? 'Booking Reference' : 'Order Reference'">Reference</span>
+            <span class="value" th:text="'#' + ${thankYou.referenceId}">#0</span>
+        </div>
+        <div class="summary-row">
+            <span class="label">Total Paid</span>
+            <span class="amount" th:text="${'₹' + thankYou.totalAmount}">₹0</span>
+        </div>
+    </div>
+
+    <div class="contact-card">
+        <h2 th:text="${thankYou.type == 'SERVICE'} ? 'Provider Contact' : 'Seller Contact'">Contact</h2>
+        <p class="contact-row"><span class="label">Name:</span><span th:text="${thankYou.merchantName}">Merchant</span></p>
+        <p class="contact-row"><span class="label">Email:</span><span th:text="${thankYou.merchantEmail}">merchant@mail.com</span></p>
+        <p class="contact-row"><span class="label">Phone:</span><span th:text="${thankYou.merchantPhone}">-</span></p>
+    </div>
+
+    <p class="countdown-note">This contact info is shown for <span id="countdown">2:00</span> — reach out for status updates on your order.</p>
+
+    <a class="discover-btn" th:href="@{/discover}">Go to Discover</a>
+</div>
+
+<script>
+    var totalSeconds = 120;
+    var countdownEl = document.getElementById('countdown');
+
+    var timer = setInterval(function () {
+        totalSeconds--;
+        if (totalSeconds <= 0) {
+            clearInterval(timer);
+            window.location.href = '/discover';
+            return;
+        }
+        var minutes = Math.floor(totalSeconds / 60);
+        var seconds = totalSeconds % 60;
+        countdownEl.textContent = minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+    }, 1000);
+</script>
+
+</body>
+</html>

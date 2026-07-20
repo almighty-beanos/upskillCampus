@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merchant Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #1F2A24;
+            --parchment: #F3EFE6;
+            --market-green: #2F6F4E;
+            --market-green-dark: #21503A;
+            --tag-gold: #C99A3D;
+            --muted: #6B7268;
+            --card-bg: #FFFFFF;
+            --border: rgba(31, 42, 36, 0.12);
+            --danger: #A6392F;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--parchment);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header.top-bar {
+            background: var(--ink);
+            color: var(--parchment);
+            padding: 28px 6vw;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        header.top-bar .brand {
+            font-family: 'Bitter', serif;
+            font-weight: 700;
+            font-size: 1.6rem;
+        }
+
+        header.top-bar .brand span { color: var(--tag-gold); }
+
+        header.top-bar .greeting {
+            font-size: 0.9rem;
+            color: rgba(243, 239, 230, 0.75);
+        }
+
+        header.top-bar .header-right {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .logout-btn {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.76rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: none;
+            border: 1px solid rgba(243, 239, 230, 0.35);
+            color: var(--parchment);
+            padding: 7px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background: rgba(243, 239, 230, 0.12);
+            border-color: rgba(243, 239, 230, 0.6);
+        }
+
+        main {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 40px 6vw 80px;
+        }
+
+        /* ---------- Top-level tabs: Sales / Profile ---------- */
+        .top-tabs {
+            display: flex;
+            gap: 4px;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 32px;
+        }
+
+        .top-tab-btn {
+            font-family: 'Bitter', serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 12px 24px;
+            color: var(--muted);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .top-tab-btn.active {
+            color: var(--ink);
+            background: var(--card-bg);
+            box-shadow: 0 -2px 0 var(--tag-gold) inset;
+            border: 1px solid var(--border);
+            border-bottom: 1px solid var(--card-bg);
+            margin-bottom: -2px;
+        }
+
+        .top-panel { display: none; }
+        .top-panel.active { display: block; animation: rise 0.35s ease; }
+
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ---------- Sub tabs: Transactions / Appointments ---------- */
+        .sub-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+
+        .sub-tab-btn {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .sub-tab-btn.active {
+            background: var(--market-green);
+            border-color: var(--market-green);
+            color: #fff;
+        }
+
+        .sub-panel { display: none; }
+        .sub-panel.active { display: block; }
+
+        /* ---------- Toolbar ---------- */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 14px 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .toolbar input[type="search"],
+        .toolbar select {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            color: var(--ink);
+            background: var(--parchment);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 9px 12px;
+        }
+
+        .toolbar input[type="search"] { flex: 1 1 200px; }
+        .toolbar select { flex: 0 1 165px; cursor: pointer; }
+
+        .toolbar input:focus, .toolbar select:focus {
+            outline: 2px solid var(--market-green);
+            outline-offset: 1px;
+        }
+
+        .toolbar .result-count {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.76rem;
+            color: var(--muted);
+            margin-left: auto;
+            white-space: nowrap;
+        }
+
+        /* ---------- Table ---------- */
+        .table-wrap {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+
+        thead th {
+            text-align: left;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+            background: var(--parchment);
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: rgba(47, 111, 78, 0.05); }
+
+        .category-chip {
+            display: inline-block;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            background: rgba(31, 42, 36, 0.08);
+            color: var(--ink);
+            padding: 3px 9px;
+            border-radius: 4px;
+        }
+
+        .amount { font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--market-green-dark); }
+
+        .empty-state {
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            padding: 50px 20px;
+            text-align: center;
+            color: var(--muted);
+            font-family: 'Bitter', serif;
+        }
+
+        /* ---------- Profile ---------- */
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 820px) {
+            .profile-grid { grid-template-columns: 1fr; }
+        }
+
+        .profile-card, .profile-form {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 24px;
+        }
+
+        .profile-card h3, .profile-form h3 {
+            font-family: 'Bitter', serif;
+            margin-top: 0;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--border);
+            font-size: 0.9rem;
+        }
+
+        .info-row:last-child { border-bottom: none; }
+        .info-row .label { color: var(--muted); }
+        .info-row .value { font-weight: 600; }
+
+        .form-group { margin-bottom: 16px; }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--ink);
+        }
+
+        .form-group input {
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--parchment);
+        }
+
+        .form-group input:focus {
+            outline: 2px solid var(--market-green);
+            outline-offset: 1px;
+        }
+
+        .form-divider {
+            border: none;
+            border-top: 1px dashed var(--border);
+            margin: 20px 0;
+        }
+
+        .form-hint {
+            font-size: 0.76rem;
+            color: var(--muted);
+            margin-top: -10px;
+            margin-bottom: 16px;
+        }
+
+        .submit-btn {
+            font-family: 'Bitter', serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            background: var(--market-green);
+            color: #fff;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .submit-btn:hover { background: var(--market-green-dark); }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: rgba(47, 111, 78, 0.12);
+            color: var(--market-green-dark);
+            border: 1px solid rgba(47, 111, 78, 0.3);
+        }
+
+        .alert-error {
+            background: rgba(166, 57, 47, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(166, 57, 47, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+<header class="top-bar">
+    <div class="brand">Market Application</div>
+    <div class="header-right">
+        <div class="greeting" th:if="${profile}">Welcome back, <span th:text="${profile.merchantName}">merchant</span></div>
+        <nav><a th:href="@{/merchant/catalog}" style="color: rgba(243,239,230,0.8); text-decoration: none; font-size: 0.85rem;">My Catalog</a></nav>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="logout-btn">Log out</button>
+        </form>
+    </div>
+</header>
+
+<main>
+    <div class="top-tabs">
+        <button type="button" class="top-tab-btn active" data-target="sales-panel">Sales</button>
+        <button type="button" class="top-tab-btn" data-target="profile-panel">Profile</button>
+    </div>
+
+    <!-- ================= SALES ================= -->
+    <section id="sales-panel" class="top-panel active">
+        <div class="sub-tabs">
+            <button type="button" class="sub-tab-btn active" data-target="transactions-panel">Transactions</button>
+            <button type="button" class="sub-tab-btn" data-target="appointments-panel">Appointments</button>
+        </div>
+
+        <!-- Transactions -->
+        <div id="transactions-panel" class="sub-panel active">
+            <div class="toolbar" th:if="${not #lists.isEmpty(transactions)}" data-scope="transactions">
+                <input type="search" class="js-search" placeholder="Search product or customer…" aria-label="Search transactions">
+                <select class="js-category" aria-label="Filter by category">
+                    <option value="all">All categories</option>
+                </select>
+                <select class="js-window" aria-label="Time window">
+                    <option value="all">All time</option>
+                    <option value="week">This week</option>
+                    <option value="month">This month</option>
+                </select>
+                <select class="js-sort" aria-label="Sort transactions">
+                    <option value="date-desc">Newest first</option>
+                    <option value="date-asc">Oldest first</option>
+                    <option value="total-desc">Total (high to low)</option>
+                    <option value="total-asc">Total (low to high)</option>
+                </select>
+                <span class="result-count js-result-count"></span>
+            </div>
+
+            <div class="table-wrap" th:if="${not #lists.isEmpty(transactions)}">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th>Total</th>
+                        <th>Customer</th>
+                    </tr>
+                    </thead>
+                    <tbody class="js-tbody">
+                    <tr th:each="t : ${transactions}"
+                        th:data-date="${t.transactionDate}"
+                        th:data-category="${t.goodsCategory}"
+                        th:data-total="${t.totalAmount}"
+                        th:data-search="${#strings.toLowerCase(t.goodsName + ' ' + t.customerName)}">
+                        <td th:text="${#temporals.format(t.transactionDate, 'dd MMM yyyy, HH:mm')}">01 Jan 2026</td>
+                        <td th:text="${t.goodsName}">Product</td>
+                        <td><span class="category-chip" th:text="${t.goodsCategory}">Category</span></td>
+                        <td th:text="${t.quantity}">1</td>
+                        <td th:text="${'₹' + t.unitPrice}">₹0</td>
+                        <td class="amount" th:text="${'₹' + t.totalAmount}">₹0</td>
+                        <td th:text="${t.customerName}">Customer</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty-state" th:if="${#lists.isEmpty(transactions)}">No transactions yet.</div>
+            <div class="empty-state js-no-results" style="display:none;">No transactions match your filters.</div>
+        </div>
+
+        <!-- Appointments -->
+        <div id="appointments-panel" class="sub-panel">
+            <div class="toolbar" th:if="${not #lists.isEmpty(appointments)}" data-scope="appointments">
+                <input type="search" class="js-search" placeholder="Search service or customer…" aria-label="Search appointments">
+                <select class="js-category" aria-label="Filter by category">
+                    <option value="all">All categories</option>
+                </select>
+                <select class="js-window" aria-label="Time window">
+                    <option value="all">All time</option>
+                    <option value="week">This week</option>
+                    <option value="month">This month</option>
+                </select>
+                <select class="js-sort" aria-label="Sort appointments">
+                    <option value="date-desc">Newest first</option>
+                    <option value="date-asc">Oldest first</option>
+                    <option value="total-desc">Total (high to low)</option>
+                    <option value="total-asc">Total (low to high)</option>
+                </select>
+                <span class="result-count js-result-count"></span>
+            </div>
+
+            <div class="table-wrap" th:if="${not #lists.isEmpty(appointments)}">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Booked</th>
+                        <th>Service</th>
+                        <th>Customer</th>
+                        <th>Dates</th>
+                        <th>Start Time</th>
+                        <th>Hrs/day</th>
+                        <th>₹/hr</th>
+                        <th>Total</th>
+                    </tr>
+                    </thead>
+                    <tbody class="js-tbody">
+                    <tr th:each="a : ${appointments}"
+                        th:data-date="${a.createdAt}"
+                        th:data-category="${a.serviceCategory}"
+                        th:data-total="${a.totalAmount}"
+                        th:data-search="${#strings.toLowerCase(a.serviceCategory + ' ' + a.customerName)}">
+                        <td th:text="${#temporals.format(a.createdAt, 'dd MMM yyyy, HH:mm')}">01 Jan 2026</td>
+                        <td><span class="category-chip" th:text="${a.serviceCategory}">Category</span></td>
+                        <td th:text="${a.customerName}">Customer</td>
+                        <td>
+                            <span th:text="${a.appointmentStartDate}">2026-01-01</span> →
+                            <span th:text="${a.appointmentEndDate}">2026-01-02</span>
+                        </td>
+                        <td th:text="${a.startingTime}">09:00</td>
+                        <td th:text="${a.workingHours}">2</td>
+                        <td th:text="${'₹' + a.pricePerHour}">₹0</td>
+                        <td class="amount" th:text="${'₹' + a.totalAmount}">₹0</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty-state" th:if="${#lists.isEmpty(appointments)}">No appointments yet.</div>
+            <div class="empty-state js-no-results" style="display:none;">No appointments match your filters.</div>
+        </div>
+    </section>
+
+    <!-- ================= PROFILE ================= -->
+    <section id="profile-panel" class="top-panel">
+        <div class="alert alert-success" th:if="${profileSuccess}" th:text="${profileSuccess}"></div>
+        <div class="alert alert-error" th:if="${profileError}" th:text="${profileError}"></div>
+
+        <div class="profile-grid">
+            <div class="profile-card">
+                <h3>Account Overview</h3>
+                <div class="info-row"><span class="label">Merchant ID</span><span class="value" th:text="${profile.merchantId}">1</span></div>
+                <div class="info-row"><span class="label">Name</span><span class="value" th:text="${profile.merchantName}">Merchant</span></div>
+                <div class="info-row"><span class="label">Email</span><span class="value" th:text="${profile.email}">merchant@mail.com</span></div>
+                <div class="info-row"><span class="label">Phone</span><span class="value" th:text="${profile.phone}">-</span></div>
+                <div class="info-row"><span class="label">Member Since</span><span class="value" th:text="${#temporals.format(profile.createdAt, 'dd MMM yyyy')}">-</span></div>
+                <div class="info-row"><span class="label">Wallet Balance</span><span class="value" th:text="${'₹' + profile.walletBalance}">₹0</span></div>
+            </div>
+
+            <div class="profile-form">
+                <h3>Edit Details</h3>
+                <form th:action="@{/merchant/dashboard/profile}" th:object="${updateRequest}" method="post">
+                    <div class="form-group">
+                        <label for="merchantName">Full Name</label>
+                        <input type="text" id="merchantName" th:field="*{merchantName}" th:value="${profile.merchantName}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" th:field="*{email}" th:value="${profile.email}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="text" id="phone" th:field="*{phone}" th:value="${profile.phone}">
+                    </div>
+
+                    <hr class="form-divider">
+
+                    <div class="form-group">
+                        <label for="newPassword">New Password (optional)</label>
+                        <input type="password" id="newPassword" th:field="*{newPassword}" autocomplete="new-password">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmNewPassword">Confirm New Password</label>
+                        <input type="password" id="confirmNewPassword" th:field="*{confirmNewPassword}" autocomplete="new-password">
+                    </div>
+
+                    <hr class="form-divider">
+
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <input type="password" id="currentPassword" th:field="*{currentPassword}" autocomplete="current-password" required>
+                    </div>
+                    <p class="form-hint">Required to confirm any change, whether or not you're changing your password.</p>
+
+                    <button type="submit" class="submit-btn">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    // Top-level tabs: Sales / Profile
+    document.querySelectorAll('.top-tab-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.top-tab-btn').forEach(function (b) { b.classList.remove('active'); });
+            document.querySelectorAll('.top-panel').forEach(function (p) { p.classList.remove('active'); });
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.target).classList.add('active');
+        });
+    });
+
+    // Sub tabs: Transactions / Appointments
+    document.querySelectorAll('.sub-tab-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.sub-tab-btn').forEach(function (b) { b.classList.remove('active'); });
+            document.querySelectorAll('.sub-panel').forEach(function (p) { p.classList.remove('active'); });
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.target).classList.add('active');
+        });
+    });
+
+    // Search, category filter, time window, and sort — scoped per table.
+    document.querySelectorAll('.sub-panel').forEach(function (panel) {
+        var toolbar = panel.querySelector('.toolbar');
+        var tbody = panel.querySelector('.js-tbody');
+        if (!toolbar || !tbody) return;
+
+        var searchInput = toolbar.querySelector('.js-search');
+        var categorySelect = toolbar.querySelector('.js-category');
+        var windowSelect = toolbar.querySelector('.js-window');
+        var sortSelect = toolbar.querySelector('.js-sort');
+        var resultCount = toolbar.querySelector('.js-result-count');
+        var noResults = panel.querySelector('.js-no-results');
+        var tableWrap = panel.querySelector('.table-wrap');
+        var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+
+        var categories = Array.from(new Set(rows.map(function (r) { return r.dataset.category; })
+            .filter(Boolean))).sort(function (a, b) { return a.localeCompare(b); });
+        categories.forEach(function (cat) {
+            var opt = document.createElement('option');
+            opt.value = cat;
+            opt.textContent = cat;
+            categorySelect.appendChild(opt);
+        });
+
+        function windowCutoff(value) {
+            var now = new Date();
+            if (value === 'week') return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            if (value === 'month') return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            return null;
+        }
+
+        function apply() {
+            var query = searchInput.value.trim().toLowerCase();
+            var category = categorySelect.value;
+            var cutoff = windowCutoff(windowSelect.value);
+            var sortBy = sortSelect.value;
+
+            var visible = rows.filter(function (row) {
+                var matchesQuery = !query || row.dataset.search.indexOf(query) !== -1;
+                var matchesCategory = category === 'all' || row.dataset.category === category;
+                var matchesWindow = !cutoff || new Date(row.dataset.date) >= cutoff;
+                return matchesQuery && matchesCategory && matchesWindow;
+            });
+
+            visible.sort(function (a, b) {
+                if (sortBy === 'date-desc') return new Date(b.dataset.date) - new Date(a.dataset.date);
+                if (sortBy === 'date-asc') return new Date(a.dataset.date) - new Date(b.dataset.date);
+                if (sortBy === 'total-desc') return parseFloat(b.dataset.total) - parseFloat(a.dataset.total);
+                if (sortBy === 'total-asc') return parseFloat(a.dataset.total) - parseFloat(b.dataset.total);
+                return 0;
+            });
+
+            rows.forEach(function (row) { row.style.display = 'none'; });
+            visible.forEach(function (row) {
+                row.style.display = '';
+                tbody.appendChild(row);
+            });
+
+            resultCount.textContent = visible.length + (visible.length === 1 ? ' result' : ' results');
+            if (tableWrap) tableWrap.style.display = visible.length ? '' : 'none';
+            if (noResults) noResults.style.display = visible.length ? 'none' : 'block';
+        }
+
+        searchInput.addEventListener('input', apply);
+        categorySelect.addEventListener('change', apply);
+        windowSelect.addEventListener('change', apply);
+        sortSelect.addEventListener('change', apply);
+
+        apply();
+    });
+</script>
+
+</body>
+</html>
