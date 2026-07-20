@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discover</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #1F2A24;
+            --parchment: #F3EFE6;
+            --market-green: #2F6F4E;
+            --market-green-dark: #21503A;
+            --tag-gold: #C99A3D;
+            --muted: #6B7268;
+            --card-bg: #FFFFFF;
+            --border: rgba(31, 42, 36, 0.12);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--parchment);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header.top-bar {
+            background: var(--ink);
+            color: var(--parchment);
+            padding: 28px 6vw;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        header.top-bar .brand {
+            font-family: 'Bitter', serif;
+            font-weight: 700;
+            font-size: 1.6rem;
+            letter-spacing: 0.01em;
+        }
+
+        header.top-bar .brand span {
+            color: var(--tag-gold);
+        }
+
+        header.top-bar .greeting {
+            font-size: 0.9rem;
+            color: rgba(243, 239, 230, 0.75);
+        }
+
+        main {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 40px 6vw 80px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 36px;
+        }
+
+        .tab-btn {
+            font-family: 'Bitter', serif;
+            font-weight: 600;
+            font-size: 1.05rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 12px 22px;
+            color: var(--muted);
+            border-radius: 8px 8px 0 0;
+            transition: color 0.15s ease, background 0.15s ease;
+        }
+
+        .tab-btn:hover { color: var(--ink); }
+
+        .tab-btn.active {
+            color: var(--ink);
+            background: var(--card-bg);
+            box-shadow: 0 -2px 0 var(--tag-gold) inset;
+            border: 1px solid var(--border);
+            border-bottom: 1px solid var(--card-bg);
+            margin-bottom: -2px;
+        }
+
+        .panel { display: none; }
+        .panel.active { display: block; animation: rise 0.35s ease; }
+
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 26px;
+            padding: 14px 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .toolbar input[type="search"],
+        .toolbar select {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            color: var(--ink);
+            background: var(--parchment);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 9px 12px;
+        }
+
+        .toolbar input[type="search"] {
+            flex: 1 1 220px;
+        }
+
+        .toolbar select {
+            flex: 0 1 170px;
+            cursor: pointer;
+        }
+
+        .toolbar input[type="search"]:focus,
+        .toolbar select:focus {
+            outline: 2px solid var(--market-green);
+            outline-offset: 1px;
+        }
+
+        .toolbar .result-count {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.76rem;
+            color: var(--muted);
+            margin-left: auto;
+            white-space: nowrap;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 26px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: visible;
+            position: relative;
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 24px rgba(31, 42, 36, 0.12);
+        }
+
+        .card-media {
+            position: relative;
+            border-radius: 10px 10px 0 0;
+            overflow: hidden;
+            aspect-ratio: 4 / 3;
+            background: #eae6db;
+        }
+
+        .card-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .category-eyebrow {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.68rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            background: rgba(31, 42, 36, 0.78);
+            color: var(--parchment);
+            padding: 4px 9px;
+            border-radius: 4px;
+        }
+
+        /* Signature element: a stapled-on price ticket with a torn edge */
+        .price-tag {
+            position: absolute;
+            top: -10px;
+            right: -8px;
+            background: var(--tag-gold);
+            color: var(--ink);
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            font-size: 0.92rem;
+            padding: 8px 14px 8px 20px;
+            transform: rotate(4deg);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+            clip-path: polygon(14% 0%, 100% 0%, 100% 100%, 14% 100%, 0% 88%, 12% 76%, 0% 64%, 12% 52%, 0% 40%, 12% 28%, 0% 16%);
+            z-index: 2;
+        }
+
+        .price-tag small {
+            font-weight: 500;
+            opacity: 0.75;
+            font-size: 0.72rem;
+        }
+
+        .card-body { padding: 18px 18px 20px; }
+
+        .card-title {
+            font-family: 'Bitter', serif;
+            font-weight: 700;
+            font-size: 1.08rem;
+            margin: 0 0 4px;
+        }
+
+        .card-merchant {
+            font-size: 0.8rem;
+            color: var(--market-green-dark);
+            font-weight: 600;
+            margin: 0 0 10px;
+        }
+
+        .card-desc {
+            font-size: 0.88rem;
+            color: var(--muted);
+            line-height: 1.5;
+            margin: 0 0 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-meta {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.76rem;
+            color: var(--muted);
+            border-top: 1px dashed var(--border);
+            padding-top: 10px;
+        }
+
+        .empty-state {
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            padding: 60px 20px;
+            text-align: center;
+            color: var(--muted);
+            font-family: 'Bitter', serif;
+            font-size: 1.05rem;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .card, .panel.active { transition: none; animation: none; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="top-bar">
+    <div class="brand">Market Application</div>
+    <div class="greeting" th:if="${customerName}">Welcome back, <span th:text="${customerName}">customer</span></div>
+    <a th:href="@{/customer/dashboard}" class="btn btn-primary">Go to Dashboard</a>
+</header>
+
+<main>
+    <div class="tabs">
+        <button type="button" class="tab-btn active" data-target="goods-panel">Goods</button>
+        <button type="button" class="tab-btn" data-target="services-panel">Services</button>
+    </div>
+
+    <section id="goods-panel" class="panel active">
+        <div class="toolbar" th:if="${not #lists.isEmpty(goodsList)}" data-scope="goods-panel">
+            <input type="search" class="js-search" placeholder="Search goods by name or description…" aria-label="Search goods">
+            <select class="js-category" aria-label="Filter goods by category">
+                <option value="all">All categories</option>
+            </select>
+            <select class="js-sort" aria-label="Sort goods">
+                <option value="name-asc">Name (A–Z)</option>
+                <option value="name-desc">Name (Z–A)</option>
+                <option value="price-asc">Price (low to high)</option>
+                <option value="price-desc">Price (high to low)</option>
+            </select>
+            <span class="result-count js-result-count"></span>
+        </div>
+        <div class="grid js-grid" th:if="${not #lists.isEmpty(goodsList)}">
+            <a class="card"
+                      th:each="item : ${goodsList}"
+                      th:href="@{'/checkout/goods/' + ${item.goodsId}}"
+                      th:data-name="${item.goodsName}"
+                      th:data-category="${item.goodsCategory}"
+                      th:data-price="${item.price}"
+                      th:data-search="${#strings.toLowerCase(item.goodsName + ' ' + item.goodsDesc + ' ' + item.merchantName)}">
+                <div class="card-media">
+                    <span class="category-eyebrow" th:text="${item.goodsCategory}">Category</span>
+                    <img th:src="${item.mediaUrls[0]}"
+                         th:alt="${item.goodsName}"
+                         onerror="this.onerror=null;this.src='/assets/NoPhoto.png';">
+                    <div class="price-tag">
+                        <span th:text="${'₹' + item.price}">₹0</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-title" th:text="${item.goodsName}">Goods name</p>
+                    <p class="card-merchant" th:text="${item.merchantName}">Merchant</p>
+                    <p class="card-desc" th:text="${item.goodsDesc}">Description</p>
+                </div>
+            </a>
+        </div>
+        <div class="empty-state js-empty" th:if="${#lists.isEmpty(goodsList)}">
+            No goods listed yet — check back soon.
+        </div>
+        <div class="empty-state js-no-results" style="display:none;">
+            No goods match your search or filters.
+        </div>
+    </section>
+
+    <section id="services-panel" class="panel">
+        <div class="toolbar" th:if="${not #lists.isEmpty(servicesList)}" data-scope="services-panel">
+            <input type="search" class="js-search" placeholder="Search services by name or description…" aria-label="Search services">
+            <select class="js-category" aria-label="Filter services by category">
+                <option value="all">All categories</option>
+            </select>
+            <select class="js-sort" aria-label="Sort services">
+                <option value="name-asc">Name (A–Z)</option>
+                <option value="name-desc">Name (Z–A)</option>
+                <option value="price-asc">Price (low to high)</option>
+                <option value="price-desc">Price (high to low)</option>
+            </select>
+            <span class="result-count js-result-count"></span>
+        </div>
+        <div class="grid js-grid" th:if="${not #lists.isEmpty(servicesList)}">
+            <a class="card"
+                      th:each="item : ${servicesList}"
+                      th:href="@{'/checkout/services/' + ${item.serviceId}}"
+                      th:data-name="${item.serviceCategory}"
+                      th:data-category="${item.serviceCategory}"
+                      th:data-price="${item.pricePerHour}"
+                      th:data-search="${#strings.toLowerCase(item.serviceCategory + ' ' + item.serviceDesc + ' ' + item.merchantName)}">
+                <div class="card-media">
+                    <span class="category-eyebrow" th:text="${item.serviceCategory}">Category</span>
+                    <img th:src="${item.mediaUrls[0]}"
+                         th:alt="${item.serviceCategory}"
+                         onerror="this.onerror=null;this.src='/assets/NoPhoto.png';">
+                    <div class="price-tag">
+                        <span th:text="${'₹' + item.pricePerHour}">₹0</span><small>/hr</small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-title" th:text="${item.serviceCategory}">Service</p>
+                    <p class="card-merchant" th:text="${item.merchantName}">Provider</p>
+                    <p class="card-desc" th:text="${item.serviceDesc}">Description</p>
+                    <p class="card-meta">
+                        Available <span th:text="${item.availabilityStartTime}">09:00</span>
+                        – <span th:text="${item.availabilityEndTime}">18:00</span>
+                    </p>
+                </div>
+            </a>
+        </div>
+        <div class="empty-state js-empty" th:if="${#lists.isEmpty(servicesList)}">
+            No services listed yet — check back soon.
+        </div>
+        <div class="empty-state js-no-results" style="display:none;">
+            No services match your search or filters.
+        </div>
+    </section>
+</main>
+
+<script>
+    document.querySelectorAll('.tab-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+            document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('active'); });
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.target).classList.add('active');
+        });
+    });
+
+    // Search, category filter, and sort — all client-side, scoped per panel.
+    document.querySelectorAll('.panel').forEach(function (panel) {
+        var toolbar = panel.querySelector('.toolbar');
+        var grid = panel.querySelector('.js-grid');
+        if (!toolbar || !grid) return;
+
+        var searchInput = toolbar.querySelector('.js-search');
+        var categorySelect = toolbar.querySelector('.js-category');
+        var sortSelect = toolbar.querySelector('.js-sort');
+        var resultCount = toolbar.querySelector('.js-result-count');
+        var noResults = panel.querySelector('.js-no-results');
+        var cards = Array.prototype.slice.call(grid.querySelectorAll('.card'));
+
+        // Populate the category dropdown from whatever categories are actually present.
+        var categories = Array.from(new Set(cards.map(function (c) { return c.dataset.category; })
+            .filter(Boolean))).sort(function (a, b) { return a.localeCompare(b); });
+        categories.forEach(function (cat) {
+            var opt = document.createElement('option');
+            opt.value = cat;
+            opt.textContent = cat;
+            categorySelect.appendChild(opt);
+        });
+
+        function apply() {
+            var query = searchInput.value.trim().toLowerCase();
+            var category = categorySelect.value;
+            var sortBy = sortSelect.value;
+
+            var visible = cards.filter(function (card) {
+                var matchesQuery = !query || card.dataset.search.indexOf(query) !== -1;
+                var matchesCategory = category === 'all' || card.dataset.category === category;
+                return matchesQuery && matchesCategory;
+            });
+
+            visible.sort(function (a, b) {
+                if (sortBy === 'name-asc') return a.dataset.name.localeCompare(b.dataset.name);
+                if (sortBy === 'name-desc') return b.dataset.name.localeCompare(a.dataset.name);
+                if (sortBy === 'price-asc') return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+                if (sortBy === 'price-desc') return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+                return 0;
+            });
+
+            cards.forEach(function (card) { card.style.display = 'none'; });
+            visible.forEach(function (card) {
+                card.style.display = '';
+                grid.appendChild(card);
+            });
+
+            resultCount.textContent = visible.length + (visible.length === 1 ? ' result' : ' results');
+            grid.style.display = visible.length ? 'grid' : 'none';
+            if (noResults) noResults.style.display = visible.length ? 'none' : 'block';
+        }
+
+        searchInput.addEventListener('input', apply);
+        categorySelect.addEventListener('change', apply);
+        sortSelect.addEventListener('change', apply);
+
+        apply();
+    });
+</script>
+
+</body>
+</html>
